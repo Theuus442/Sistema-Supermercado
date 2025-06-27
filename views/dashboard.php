@@ -2,7 +2,7 @@
 
 session_start();
 
-if (!isset($_SESSION['usuario']) || !isset($_SESSION['perfil'])){
+if (!isset($_SESSION['usuario']) || !isset($_SESSION['perfil'])) {
     header("Location: login_form.php");
     exit();
 }
@@ -13,46 +13,41 @@ $perfil = $_SESSION['perfil'];
 
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Supermercado</title>
 </head>
+
 <body>
     <h2>Bem vindo, <?= htmlspecialchars($usuario) ?>!</h2>
-    <p>Seu perfil: <strong><?=htmlspecialchars($perfil) ?></strong></p>
+    <p>Seu perfil: <strong><?= htmlspecialchars($perfil) ?></strong></p>
     <hr>
 
-    <?php if ($perfil === 'caixa'):?>
-        <h3>Painel do Caixa</h3>
-        <ul>
-            <li><a href="#">Ver lista de produtos</a></li>
-            <li><a href="#">Registrar venda</a></li>
-        </ul>
+    <?php
+    require_once __DIR__ . '/../lib/produtos.php';
 
-    <?php elseif($perfil === 'estoque'):?>
-        <h3>Painel do Estoque</h3>
-        <ul>
-            <li><a href="#">Visualizar produtos</a></li>
-            <li><a href="#">Inserir/Atualizar/Excluir produtos</a></li>
-        </ul>
-    <?php elseif($perfil === 'admin'):?>
-        <h3>Painel do Administrador</h3>
-        <ul>
-            <li><a href="#">Visualizar tudo</a></li>
-            <li><a href="#">Solicitar liberação ao financeiro</a></li>
-        </ul>
-    <?php elseif($perfil === 'financeiro'):?>
-        <h3>Painel do financeiro</h3>
-        <ul>
-            <li><a href="#">Visualizar solicitações</a></li>
-            <li><a href="#">Aprovar ou negar cadastro</a></li>
-        </ul>
-    <?php else: ?>
-        <p>Perfil não reconhecido</p>
-    <?php endif;?>
+    switch ($perfil) {
+        case 'caixa':
+            include __DIR__ . '/painel/caixa.php';
+            break;
+        case 'estoque':
+            include __DIR__ . '/painel/estoque.php';
+            break;
+        case 'admin':
+            include __DIR__ . '/painel/admin.php';
+            break;
+        case 'financeiro':
+            include __DIR__ . '/painel/financeiro.php';
+            break;
+        default:
+            echo "<p>Perfil não reconhecido.</p>";
+    }
+    ?>
 
     <br>
     <a href="logout.php">Sair</a>
 </body>
+
 </html>
