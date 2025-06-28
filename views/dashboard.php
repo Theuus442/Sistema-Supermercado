@@ -1,6 +1,7 @@
 <?php
 
 session_start();
+require_once __DIR__ . '/../lib/config.php';
 
 if (!isset($_SESSION['usuario']) || !isset($_SESSION['perfil'])) {
     header("Location: login_form.php");
