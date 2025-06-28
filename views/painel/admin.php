@@ -2,7 +2,7 @@
 
 $produtos = getProdutos();
 
-$arquivoSolicitacoes = __DIR__  . '../../data/solicitacoes.json';
+$arquivoSolicitacoes = __DIR__  . '/../../data/solicitacoes.json';
 $solicitacoes = [];
 
 if (file_exists($arquivoSolicitacoes)) {
@@ -45,7 +45,9 @@ function existeSolicitacaoPendente(array $solicitacoes): bool
     <ul>
         <?php foreach ($solicitacoes as $sol): ?>
             <li>
-                Solicitação
+                <?= htmlspecialchars($sol['usuario']) ?>
+                solicitou em <?= date('d/m/Y H:i', strtotime($sol['data'])) ?>
+                - Status: <strong> <?= $sol['status'] ?></strong>
             </li>
         <?php endforeach; ?>
     </ul>
@@ -55,7 +57,7 @@ function existeSolicitacaoPendente(array $solicitacoes): bool
 <?php if (existeSolicitacaoPendente($solicitacoes)): ?>
     <p>Já existe uma solicitação pendente! Aguarde a resposta do time financeiro.</p>
 <?php else: ?>
-    <form method="post" action="../../lib/solicitação.php">
+    <form method="post" action="../../lib/solicitacao.php">
         <button type="submit" name="solicitar">Enviar solicitação ao financeiro</button>
     </form>
 <?php endif; ?>
