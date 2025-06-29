@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '../../lib/produtos.php';
+require_once __DIR__ . '/../../lib/produtos.php';
 
 
 $produtos = getProdutos();
