@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'], $_POST['acao'])
                 if ($solicitacao['id'] == $id && $solicitacao['status'] === 'pendente') {
                     if ($acao === 'aprovar') {
                         $solicitacao['status'] = 'aprovado';
+                        file_put_contents(__DIR__ . '/../data/permissao_estoque.json', json_encode(['liberado' => true]));
                     } elseif ($acao === 'negar') {
                         $solicitacao['status'] = 'negado';
                     }
