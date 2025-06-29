@@ -32,6 +32,22 @@ if (file_exists($arquivoPermissao)) {
     <?php endforeach; ?>
 </ul>
 
+<h4>Inserir novo produto</h4>
+
+<form action="../../lib/inserir_produto.php" method="post">
+        <label for="nome">Nome:</label>
+        <input type="text" name="nome" id="nome" required>
+
+        <label for="quantidade">Quantidade:</label>
+        <input type="number" name="quantidade" id="quantidade" min="1" required>
+
+        <label for="preco">Preço:</label>
+        <input type="number" step="0.01" name="preco" id="preco" required>
+
+        <button type="submit">Cadastrar novo produto</button>
+</form>
+
+
 <?php if ($liberado): ?>
     <p>Você pode inserir, atualizar e excluir produtos!</p>
     <ul>
