@@ -7,32 +7,33 @@ if (!isset($_SESSION['usuario']) || $_SESSION['perfil'] !== 'financeiro') {
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'], $_POST['acao'])) {
-    $id = $_POST['id'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_solicitacao'], $_POST['acao'])) {
+
+    require_once __DIR__ . '/../Connection.php';
+
+    $id = (int) $_POST['id_solicitacao'];
     $acao = $_POST['acao'];
 
-    $arquivoJson = __DIR__ . '/../data/solicitacoes.json';
-
-    if (file_exists($arquivoJson)) {
-        $json = file_get_contents($arquivoJson);
-        $solicitacoes = json_decode($json, true);
-
-        if (is_array($solicitacoes)) {
-            foreach ($solicitacoes as &$solicitacao) {
-                if ($solicitacao['id'] == $id && $solicitacao['status'] === 'pendente') {
-                    if ($acao === 'aprovar') {
-                        $solicitacao['status'] = 'aprovado';
-                        file_put_contents(__DIR__ . '/../data/permissao_estoque.json', json_encode(['liberado' => true]));
-                    } elseif ($acao === 'negar') {
-                        $solicitacao['status'] = 'negado';
-                    }
-                    break;
-                }
-            }
-            file_put_contents($arquivoJson, json_encode($solicitacoes, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    try {
+        if ($acao === 'aprovar') {
+            $sql = "UPDATE solicitacoes 
+                    SET status = 'aprovado', data_aprovacao = NOW() 
+                    WHERE id_solicitacao = :id AND status = 'pendente'";
+        } elseif ($acao === 'negar') {
+            $sql = "UPDATE solicitacoes 
+                    SET status = 'negado', data_aprovacao = NOW() 
+                    WHERE id_solicitacao = :id AND status = 'pendente'";
+        } else {
+            throw new Exception("Ação inválida");
         }
+
+        $comandoAtualizaSolicitacao = $pdo->prepare($sql);
+        $comandoAtualizaSolicitacao->execute(['id' => $id]);
+    } catch (Exception $erro) {
+        header('Location: ../views/dashboard.php?erro=erro_ao_processar');
+        exit;
     }
 }
 
-header('Location: ../views/dashboard.php');
-exit();
+header('Location: ../views/dashboard.php?sucesso=solicitacao_processada');
+exit;

@@ -39,12 +39,12 @@ if (file_exists($caminhoSolicitacoes)) {
 <h4>Produtos</h4>
 
 <ul>
-    <?php foreach ($produtos as $indice => $produto): ?>
+    <?php foreach ($produtos as $produto): ?>
         <li>
-            <?= htmlspecialchars($produto['nome']) ?>
+            <?= htmlspecialchars($produto['nome_produto']) ?>
             - Quantidade <?= intval($produto['quantidade']) ?>
             - Preço: R$ <?= number_format($produto['preco'], 2, ',', '.') ?>
-            <a href="painel/editar_produto.php?indice=<?= $indice ?>">Editar</a>
+            <a href="painel/editar_produto.php?id_produto=<?= $produto['id_produto'] ?>">Editar</a>
         </li>
     <?php endforeach; ?>
 </ul>

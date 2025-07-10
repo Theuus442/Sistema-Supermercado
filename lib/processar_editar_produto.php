@@ -12,74 +12,51 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$liberado = false;
-$caminhoSolicitacoes = __DIR__ . '/../data/solicitacoes.json';
+require_once __DIR__ . '/../Connection.php';
 
-if (file_exists($caminhoSolicitacoes)) {
-    $json = file_get_contents($caminhoSolicitacoes);
-    $solicitacoes = json_decode($json, true);
+try {
+    global $pdo;
 
-    if (is_array($solicitacoes)) {
-        $solicitacoesAdmin = array_filter($solicitacoes, function ($solicitacao) {
-            return $solicitacao['usuario'] === 'admin';
-        });
+    $sql = "SELECT status from solicitacoes WHERE id_perfil = 1 AND ativo = 1 ORDER BY data_aprovacao DESC LIMIT 1";
 
+    $consulta = $pdo->query($sql);
+    $ultimaSolicitacao = $consulta->fetch(PDO::FETCH_ASSOC);
 
-        usort($solicitacoesAdmin, function ($solicitacaoMaisRecente, $solicitacaoMaisAntiga) {
-            return strtotime($solicitacaoMaisAntiga['data']) <=> strtotime($solicitacaoMaisRecente['data']);
-        });
-
-        if (!empty($solicitacoesAdmin)) {
-            $ultimaSolicitacao = $solicitacoesAdmin[0];
-            if ($ultimaSolicitacao['status'] === 'aprovado') {
-                $liberado = true;
-            }
-        }
+    if (!$ultimaSolicitacao || $ultimaSolicitacao['status'] !== 'aprovado') {
+        header('Location: ../views/dashboard.php?erro=nao_liberado');
+        exit;
     }
-}
-
-if (!$liberado){
-    header('Location: ../views/dashboard.php?erro=nao_liberado');
+} catch (PDOException $erro) {
+    header('Location: ../views/dashboard.php?erro=erro_solicitacao');
     exit;
 }
 
-
-
-
-
-$indice = $_POST['indice'] ?? null;
-$nome = $_POST['nome'] ?? '';
+$idProduto = $_POST['id_produto'] ?? null;
+$nomeProduto = $_POST['nome'] ?? '';
 $quantidade = $_POST['quantidade'] ?? '';
 $preco = $_POST['preco'] ?? '';
 
-if (!is_numeric($indice) || trim($nome) === '' || !is_numeric($quantidade) || !is_numeric($preco)) {
+if (
+    !is_numeric($idProduto) || trim($nomeProduto) === '' || !is_numeric($quantidade) || (int) $quantidade < 1
+    ||  !is_numeric($preco) || (float) $preco <= 0
+) {
     header('Location: ../views/dashboard.php?erro=campos');
     exit;
 }
 
-$caminho = __DIR__ . '/../data/produtos.json';
-$produtos = [];
+try {
+    $sql = "UPDATE produtos SET nome_produto = :nome_produto, quantidade = :quantidade, preco = :preco WHERE id_produto = :id_produto AND existe = 1";
+    $comandoAtualizarProduto = $pdo->prepare($sql);
+    $comandoAtualizarProduto->execute([
+        'nome_produto' => trim($nomeProduto),
+        'quantidade' => (int) $quantidade,
+        'preco' => (float) $preco,
+        'id_produto' => (int) $idProduto
+    ]);
 
-if (file_exists($caminho)) {
-    $json = file_get_contents($caminho);
-    $produtos = json_decode($json, true);
-
-    if (!is_array($produtos)) {
-        $produtos = [];
-    }
-}
-
-if (!isset($produtos[$indice])) {
-    header('Location: ../views/dashboard.php?erro=produto_nao_encontrado');
+    header('Location: ../views/dashboard.php?sucesso=produto_atualizado');
+    exit;
+} catch (PDOException $erro) {
+    header('Location: ../views/dashboard.php?erro=erro_banco');
     exit;
 }
-
-$produtos[$indice]['nome'] = trim($nome);
-$produtos[$indice]['quantidade'] = (int) $quantidade;
-$produtos[$indice]['preco'] = (float) $preco;
-
-file_put_contents($caminho, json_encode($produtos, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-
-header('Location: ../views/dashboard.php');
-
-exit;

@@ -5,7 +5,7 @@
 <ul>
     <?php foreach ($produtos as $produto): ?>
         <li>
-            <?= htmlspecialchars($produto['nome']) ?> - Quantidade: <?= intval($produto['quantidade']) ?> - Preço: R$ <?= number_format($produto['preco'], 2, ',', '.') ?>
+            <?= htmlspecialchars($produto['nome_produto']) ?> - Quantidade: <?= intval($produto['quantidade']) ?> - Preço: R$ <?= number_format($produto['preco'], 2, ',', '.') ?>
         </li>
     <?php endforeach; ?>
 </ul>

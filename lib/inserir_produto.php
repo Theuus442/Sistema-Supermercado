@@ -3,42 +3,54 @@
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location:../views/dashboard.php');
+    header('Location: ../views/dashboard.php');
     exit;
 }
 
-$nome = $_POST['nome'] ?? '';
-$quantidade = $_POST['quantidade'] ?? '';
-$preco = $_POST['preco'] ?? '';
+require_once __DIR__ . '/../Connection.php';
 
-if (trim($nome) === '' ||  !is_numeric($quantidade) || !is_numeric($preco)) {
-    header('Location: ../views/dashboard.php?erro=campos');
+$nomeProduto = trim($_POST['nome'] ?? '');
+$quantidadeProduto = $_POST['quantidade'] ?? '';
+$precoProduto = $_POST['preco'] ?? '';
+$idCategoria = $_POST['id_categoria'] ?? 1;
+
+if ($nomeProduto === '' || !is_numeric($quantidadeProduto) || !is_numeric($precoProduto)) {
+    header('Location: ../views/dashboard.php?erro=campos_invalidos');
     exit;
 }
 
-$caminho = __DIR__ . '/../data/produtos.json';
-$produtos = [];
+try {
+    $sqlBuscarProduto = "SELECT * FROM produtos WHERE nome_produto = :nome_produto AND existe = 0 LIMIT 1";
+    $consultaProdutoExcluido = $pdo->prepare($sqlBuscarProduto);
+    $consultaProdutoExcluido->execute(['nome_produto' => $nomeProduto]);
+    $produtoExistente = $consultaProdutoExcluido->fetch(PDO::FETCH_ASSOC);
 
-if (file_exists($caminho)) {
-    $json = file_get_contents($caminho);
-    $produtos = json_decode($json, true);
-    if (!is_array($produtos)) {
-        $produtos = [];
+    if ($produtoExistente) {
+        $sqlAtualizarProduto = "UPDATE produtos 
+            SET quantidade = :quantidade, preco = :preco, existe = 1 
+            WHERE id_produto = :id_produto";
+
+        $consultaAtualizarProduto = $pdo->prepare($sqlAtualizarProduto);
+        $consultaAtualizarProduto->execute([
+            'quantidade' => (int) $quantidadeProduto,
+            'preco' => (float) $precoProduto,
+            'id_produto' => (int) $produtoExistente['id_produto']
+        ]);
+    } else {
+        $sqlInserirProduto = "INSERT INTO produtos (nome_produto, quantidade, preco, id_categoria, existe) 
+            VALUES (:nome_produto, :quantidade, :preco, :id_categoria, 1)";
+        $comandoInserirProduto = $pdo->prepare($sqlInserirProduto);
+        $comandoInserirProduto->execute([
+            'nome_produto' => $nomeProduto,
+            'quantidade' => (int) $quantidadeProduto,
+            'preco' => (float) $precoProduto,
+            'id_categoria' => (int) $idCategoria
+        ]);
     }
-}
 
-if (!preg_match('/[a-zA-ZÀ-ÿ]/u', $nome)) {
-    header('Location: ../views/dashboard.php?erro=nome_invalido');
+    header('Location: ../views/dashboard.php?sucesso=produto_salvo');
+    exit;
+} catch (PDOException $erro) {
+    header('Location: ../views/dashboard.php?erro=erro_banco');
     exit;
 }
-
-$produtos[] = [
-    'nome' => trim($nome),
-    'quantidade' => (int) $quantidade,
-    'preco' => (float) $preco
-];
-
-file_put_contents($caminho, json_encode($produtos, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-
-header('Location: ../views/dashboard.php');
-exit;

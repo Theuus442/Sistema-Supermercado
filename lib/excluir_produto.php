@@ -4,6 +4,7 @@ session_start();
 
 if (!isset($_SESSION['usuario']) || $_SESSION['perfil'] !== 'estoque') {
     header('Location: ../views/login_form.php');
+    exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -11,63 +12,40 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$liberado = false;
+require_once __DIR__ . '/../Connection.php';
 
-$caminhoSolicitacoes = __DIR__ . '/../data/solicitacoes.json';
+try {
+    global $pdo;
+    $consultaSolicitacao = $pdo->prepare("SELECT * FROM solicitacoes WHERE id_perfil = 1 
+    AND status = 'aprovado' AND ativo = 1 ORDER BY data_aprovacao DESC LIMIT 1");
 
-if (file_exists($caminhoSolicitacoes)) {
-    $json = file_get_contents($caminhoSolicitacoes);
-    $solicitacoes = json_decode($json, true);
+    $consultaSolicitacao->execute();
 
-    if (is_array($solicitacoes)) {
-        $solicitacoesAdmin = array_filter($solicitacoes, function ($solicitacao) {
-            return $solicitacao['usuario'] === 'admin';
-        });
+    $solicitacao = $consultaSolicitacao->fetch(PDO::FETCH_ASSOC);
 
-        usort($solicitacoesAdmin, function ($solicitacaoMaisRecente, $solicitacaoMaisAntiga) {
-            return strtotime($solicitacaoMaisAntiga['data']) <=> strtotime($solicitacaoMaisRecente['data']);
-        });
-
-        if (!empty($solicitacoesAdmin) && $solicitacoesAdmin[0]['status'] === 'aprovado') {
-            $liberado = true;
-        }
+    if (!$solicitacao) {
+        header('Location: ../views/dashboard.php?erro=nao_liberado');
+        exit;
     }
-}
-
-if (!$liberado) {
-    header('Location: ../views/dashboard.php?erro=nao_liberado');
+} catch (PDOException $e) {
+    echo "Erro no banco: " . $e->getMessage();
     exit;
 }
 
-$indice = $_POST['indice'] ?? null;
+$idProduto = $_POST['id_produto'] ?? null;
 
-if (!is_numeric($indice)) {
-    header('Location: ../views/dashboard.php?erro=indice_invalido');
+if (!is_numeric($idProduto)) {
+    header('Location: ../views/dashboard.php?erro=id_invalido');
     exit;
 }
 
-$caminhoProdutos = __DIR__ . '/../data/produtos.json';
-$produtos = [];
+try {
+    $atualizaProduto = $pdo->prepare("UPDATE produtos SET existe = 0 WHERE id_produto = :id_produto");
+    $atualizaProduto->execute(['id_produto' => (int)$idProduto]);
 
-
-if (file_exists($caminhoProdutos)) {
-    $json = file_get_contents($caminhoProdutos);
-    $produtos = json_decode($json, true);
-
-    if (!is_array($produtos)) {
-        $produtos = [];
-    }
-}
-
-if (!isset($produtos[$indice])) {
-    header('Location: ../views/dashboard.php?erro=produto_nao_encontrado');
+    header('Location: ../views/dashboard.php?sucesso=produto_excluido');
+    exit;
+} catch (PDOException $e) {
+    echo "Erro no banco: " . $e->getMessage();
     exit;
 }
-
-unset($produtos[$indice]);
-$produtos = array_values($produtos);
-
-file_put_contents($caminhoProdutos, json_encode($produtos, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-
-header('Location: ../views/dashboard.php?sucesso=produto_excluido');
-exit;

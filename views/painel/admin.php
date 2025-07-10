@@ -1,61 +1,74 @@
 <?php
 
-$produtos = getProdutos();
+require_once __DIR__ . '/../../Connection.php';
 
-$arquivoSolicitacoes = __DIR__  . '/../../data/solicitacoes.json';
-$solicitacoes = [];
-
-if (file_exists($arquivoSolicitacoes)) {
-    $json = file_get_contents($arquivoSolicitacoes);
-    $solicitacoes = json_decode($json, true);
-
-    if (!is_array($solicitacoes)) {
-        $solicitacoes = [];
-    }
+if (!isset($_SESSION['usuario']) || $_SESSION['perfil'] !== 'admin') {
+    header('Location: ../views/login_form.php');
+    exit();
 }
 
-function existeSolicitacaoPendente(array $solicitacoes): bool
-{
-    foreach ($solicitacoes as $sol) {
-        if ($sol['status'] === 'pendente') {
-            return true;
-        }
-    }
+$sqlSelecionarProdutosAtivos = "
+    SELECT nome_produto, quantidade, preco 
+    FROM produtos 
+    WHERE existe = 1 
+    ORDER BY nome_produto
+";
 
-    return false;
+$consultaProdutosAtivos = $pdo->query($sqlSelecionarProdutosAtivos);
+$listaProdutos = $consultaProdutosAtivos->fetchAll(PDO::FETCH_ASSOC);
+
+
+$sqlSolicitacoes = "
+    SELECT s.id_solicitacao, s.status, s.data_solicitacao, s.data_aprovacao, u.username AS nome_usuario
+    FROM solicitacoes s
+    JOIN perfis p ON s.id_perfil = p.id_perfil
+    JOIN usuarios u ON p.id_usuario = u.id_usuario
+    ORDER BY s.data_solicitacao DESC
+";
+
+$consultaSolicitacoes = $pdo->query($sqlSolicitacoes);
+$listaSolicitacoes = $consultaSolicitacoes->fetchAll(PDO::FETCH_ASSOC);
+
+$solicitacaoPendenteExiste = false;
+
+foreach ($listaSolicitacoes as $solicitacao) {
+    if ($solicitacao['status'] === 'pendente') {
+        $solicitacaoPendenteExiste = true;
+        break;
+    }
 }
 ?>
 
-<h3>Painel do administrador</h3>
+<h3>Painel do Administrador</h3>
+
 <h4>Produtos</h4>
 <ul>
-    <?php foreach ($produtos as $produto): ?>
+    <?php foreach ($listaProdutos as $produto): ?>
         <li>
-            <?= htmlspecialchars($produto['nome']) ?>
-            - Quantidade - <?= intval($produto['quantidade']) ?>
+            <?= htmlspecialchars($produto['nome_produto']) ?>
+            - Quantidade: <?= intval($produto['quantidade']) ?>
             - Preço: R$ <?= number_format($produto['preco'], 2, ',', '.') ?>
         </li>
     <?php endforeach; ?>
 </ul>
 
 <h4>Solicitações</h4>
-<?php if (empty($solicitacoes)): ?>
-    <p>Não há Solicitações registradas!</p>
+<?php if (empty($listaSolicitacoes)): ?>
+    <p>Não há solicitações registradas.</p>
 <?php else: ?>
     <ul>
-        <?php foreach ($solicitacoes as $sol): ?>
+        <?php foreach ($listaSolicitacoes as $solicitacao): ?>
             <li>
-                <?= htmlspecialchars($sol['usuario']) ?>
-                solicitou em <?= date('d/m/Y H:i', strtotime($sol['data'])) ?>
-                - Status: <strong> <?= $sol['status'] ?></strong>
+                <?= htmlspecialchars($solicitacao['nome_usuario']) ?> solicitou em
+                <?= date('d/m/Y H:i', strtotime($solicitacao['data_solicitacao'])) ?>
+                - Status: <strong><?= $solicitacao['status'] ?></strong>
             </li>
         <?php endforeach; ?>
     </ul>
 <?php endif; ?>
 
-
-<?php if (existeSolicitacaoPendente($solicitacoes)): ?>
-    <p>Já existe uma solicitação pendente! Aguarde a resposta do time financeiro.</p>
+<?php if ($solicitacaoPendenteExiste): ?>
+    <p>Já existe uma solicitação pendente. Aguarde a resposta do time financeiro.</p>
 <?php else: ?>
     <form method="post" action="../../lib/solicitacao.php">
         <button type="submit" name="solicitar">Enviar solicitação ao financeiro</button>
