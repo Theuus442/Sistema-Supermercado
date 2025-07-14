@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../Connection.php';
 require_once __DIR__ . '/../../helpers/SessionHelper.php';
 require_once __DIR__ . '/../../lib/solicitacaoService.php';
 require_once __DIR__ . '/../../lib/adminService.php';
+require_once __DIR__ . '/../../lib/produtoService.php';
 
 SessionHelper::requerPerfil('admin');
 
