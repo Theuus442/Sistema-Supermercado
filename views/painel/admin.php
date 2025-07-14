@@ -1,42 +1,16 @@
 <?php
 
 require_once __DIR__ . '/../../Connection.php';
+require_once __DIR__ . '/../../helpers/SessionHelper.php';
+require_once __DIR__ . '/../../lib/solicitacaoService.php';
+require_once __DIR__ . '/../../lib/adminService.php';
 
-if (!isset($_SESSION['usuario']) || $_SESSION['perfil'] !== 'admin') {
-    header('Location: ../views/login_form.php');
-    exit();
-}
+SessionHelper::requerPerfil('admin');
 
-$sqlSelecionarProdutosAtivos = "
-    SELECT nome_produto, quantidade, preco 
-    FROM produtos 
-    WHERE existe = 1 
-    ORDER BY nome_produto
-";
+$listaProdutos = ProdutoService::getProdutos();
+$listaSolicitacoes = AdminService::listarSolicitacoesComUsuarios();
+$solicitacaoPendenteExiste = SolicitacaoService::existeSolicitacaoPendente();
 
-$consultaProdutosAtivos = $pdo->query($sqlSelecionarProdutosAtivos);
-$listaProdutos = $consultaProdutosAtivos->fetchAll(PDO::FETCH_ASSOC);
-
-
-$sqlSolicitacoes = "
-    SELECT s.id_solicitacao, s.status, s.data_solicitacao, s.data_aprovacao, u.username AS nome_usuario
-    FROM solicitacoes s
-    JOIN perfis p ON s.id_perfil = p.id_perfil
-    JOIN usuarios u ON p.id_usuario = u.id_usuario
-    ORDER BY s.data_solicitacao DESC
-";
-
-$consultaSolicitacoes = $pdo->query($sqlSolicitacoes);
-$listaSolicitacoes = $consultaSolicitacoes->fetchAll(PDO::FETCH_ASSOC);
-
-$solicitacaoPendenteExiste = false;
-
-foreach ($listaSolicitacoes as $solicitacao) {
-    if ($solicitacao['status'] === 'pendente') {
-        $solicitacaoPendenteExiste = true;
-        break;
-    }
-}
 ?>
 
 <h3>Painel do Administrador</h3>
@@ -70,7 +44,7 @@ foreach ($listaSolicitacoes as $solicitacao) {
 <?php if ($solicitacaoPendenteExiste): ?>
     <p>Já existe uma solicitação pendente. Aguarde a resposta do time financeiro.</p>
 <?php else: ?>
-    <form method="post" action="../../lib/solicitacao.php">
+    <form method="post" action="../../actions/solicitacao.php">
         <button type="submit" name="solicitar">Enviar solicitação ao financeiro</button>
     </form>
 <?php endif; ?>

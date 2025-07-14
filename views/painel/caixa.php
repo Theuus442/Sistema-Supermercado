@@ -1,6 +1,8 @@
 <h3>Painel do Produto</h3>
 
-<?php $produtos = getProdutos(); ?>
+<?php
+require_once __DIR__ . '/../../lib/produtoService.php';
+$produtos = ProdutoService::getProdutos();?>
 
 <ul>
     <?php foreach ($produtos as $produto): ?>

@@ -1,19 +1,11 @@
 <?php
-if (!isset($_SESSION['usuario']) || $_SESSION['perfil'] !== 'financeiro') {
-    header('Location: ../views/login_form.php');
-    exit;
-}
-
 require_once __DIR__ . '/../../Connection.php';
+require_once __DIR__ . '/../../lib/solicitacaoService.php';
+require_once __DIR__ . '/../../helpers/SessionHelper.php';
 
-$sql =  "SELECT s.id_solicitacao, s.status, s.data_solicitacao, s.data_aprovacao, u.username
-    FROM solicitacoes s
-    JOIN perfis p ON s.id_perfil = p.id_perfil
-    JOIN usuarios u ON p.id_usuario = u.id_usuario
-    ORDER BY s.data_solicitacao DESC";
+SessionHelper::requerPerfil('financeiro');
 
-$comandoAtualizarSolicitacoes = $pdo->query($sql);
-$solicitacoes = $comandoAtualizarSolicitacoes->fetchAll(PDO::FETCH_ASSOC);
+$solicitacoes = SolicitacaoService::listarTodasSolicitacoes();
 ?>
 
 <h3>Painel Financeiro</h3>
@@ -31,7 +23,7 @@ $solicitacoes = $comandoAtualizarSolicitacoes->fetchAll(PDO::FETCH_ASSOC);
                 </div>
 
                 <?php if ($sol['status'] === 'pendente'): ?>
-                    <form action="../../lib/processar_solicitacao.php" method="post" style="margin-top: 4px;">
+                    <form action="../../actions/processar_solicitacao.php" method="post" style="margin-top: 4px;">
                         <input type="hidden" name="id_solicitacao" value="<?= $sol['id_solicitacao'] ?>">
                         <button type="submit" name="acao" value="aprovar">✅ Aprovar</button>
                         <button type="submit" name="acao" value="negar">❌ Negar</button>

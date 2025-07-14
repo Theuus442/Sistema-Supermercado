@@ -1,25 +1,23 @@
 <?php
 
-session_start();
 
-if (!isset($_SESSION['usuario']) || $_SESSION['perfil'] !== 'estoque') {
-    header('Location: ../login_form.php');
-    exit;
-}
+require_once __DIR__ . '/../../helpers/SessionHelper.php';
+
+SessionHelper::requerPerfil('estoque');
 
 if (!isset($_GET['id_produto']) || !is_numeric($_GET['id_produto'])) {
-    header('Location: dashboard.php');
+    header('Location: index.php');
     exit;
 }
 
 $idProdutoSelecionado = (int) $_GET['id_produto'];
 
-require_once __DIR__ . '/../../lib/produtos.php';
+require_once __DIR__ . '/../../lib/produtoService.php';
 
-$produtoSelecionado = getProdutoPorId($idProdutoSelecionado);
+$produtoSelecionado = ProdutoService::getProdutoPorId($idProdutoSelecionado);
 
 if (!$produtoSelecionado) {
-    header('Location: dashboard.php?erro=produto_nao_encontrado');
+    header('Location: index.php?erro=produto_nao_encontrado');
     exit;
 }
 
@@ -37,7 +35,7 @@ if (!$produtoSelecionado) {
 <body>
     <h3>Editar Produto</h3>
 
-    <form action="../../lib/processar_editar_produto.php" method="post">
+    <form action="../../actions/processar_editar_produto.php" method="post">
         <input type="hidden" name="id_produto" value="<?= $produtoSelecionado['id_produto'] ?>" />
 
         <label for="nome">Nome:</label><br>
@@ -56,7 +54,7 @@ if (!$produtoSelecionado) {
         <button type="submit">Salvar Alterações</button>
     </form>
     <br>
-    <form action="../../lib/excluir_produto.php" method="post" onsubmit="return confirm('Tem certeza que deseja excluir este produto?')">
+    <form action="../../actions/excluir_produto.php" method="post" onsubmit="return confirm('Tem certeza que deseja excluir este produto?')">
         <input type="hidden" name="id_produto" value="<?= $produtoSelecionado['id_produto'] ?>" />
         <button type="submit" style="color: red;">Excluir Produto</button>
     </form>
@@ -64,7 +62,7 @@ if (!$produtoSelecionado) {
 
     <br>
 
-    <a href="../dashboard.php">Voltar ao Dashboard</a>
+    <a href="../index.php">Voltar à tela inicial</a>
 
 </body>
 
