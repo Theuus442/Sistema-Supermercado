@@ -1,7 +1,7 @@
 <?php
 
 session_start();
-require_once __DIR__ . '/Connection.php';
+require_once __DIR__ . '/config/Connection.php';
 require_once __DIR__ . "/lib/UsuarioService.php";
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){

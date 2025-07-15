@@ -1,7 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../../lib/produtoService.php';
-require_once __DIR__ . '/../../Connection.php';
+require_once __DIR__ . '/../config/Connection.php';
 require_once __DIR__ . '/../../lib/solicitacaoService.php';
 
 $ultimaSolicitacao = SolicitacaoService::ultimaSolicitacaoPorPerfil(1);
