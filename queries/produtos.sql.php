@@ -8,13 +8,13 @@ return [
     'excluir_logico' => "UPDATE produtos SET existe = 0 WHERE id_produto = :id_produto",
 
     'inserir' => "INSERT INTO produtos (nome_produto, quantidade, preco, existe) VALUES (:nome_produto, :quantidade, :preco, 1)",
-    
+
     'atualizar' => "UPDATE produtos SET nome_produto = :nome_produto, quantidade = :quantidade, preco = :preco WHERE id_produto = :id_produto AND existe = 1",
 
     'buscar_por_nome_excluido' => "SELECT * FROM produtos WHERE nome_produto = :nome_produto AND existe = 0 LIMIT 1",
 
     'reativar_produto' => "UPDATE produtos SET quantidade = :quantidade, preco = :preco, existe = 1 WHERE id_produto = :id_produto",
 
+    'diminuir_estoque' => 'UPDATE produtos SET quantidade = quantidade - :qtd_diminuir WHERE id_produto = :id_produto AND quantidade >= :qtd_verificar
+',
 ];
-
-?>
