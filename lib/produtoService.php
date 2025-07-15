@@ -99,4 +99,17 @@ class ProdutoService
         $comando->execute(['nome_produto' => $nome]);
         return $comando->fetch(PDO::FETCH_ASSOC);
     }
+
+    public static function diminuirEstoque(int $idProduto, int $quantidade): bool
+    {
+        global $pdo;
+        self::carregarSQL();
+
+        $comandoExecutar = $pdo->prepare(self::$sql['diminuir_estoque']);
+        return $comandoExecutar->execute([
+            'id_produto' => $idProduto,
+            'qtd_diminuir' => $quantidade,
+            'qtd_verificar' => $quantidade,
+        ]);
+    }
 }
