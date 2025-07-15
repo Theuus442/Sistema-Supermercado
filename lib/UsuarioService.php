@@ -20,7 +20,7 @@ class UsuarioService
         $comando->execute(['username' => $username]);
         $usuario = $comando->fetch(PDO::FETCH_ASSOC);
 
-        if ($usuario && $senha === $usuario['senha']) {
+        if ($usuario && password_verify($senha, $usuario['senha'])) {
             return $usuario['username'];
         }
 
