@@ -37,16 +37,27 @@ Este é um sistema web em **PHP puro** para gestão simples de um supermercado, 
 
 Sistema-Supermercado/
 │
+
 ├── actions/ # Arquivos responsáveis por processar ações (inserir, excluir, venda, etc.)
+
 ├── config/ # Arquivos de configuração e conexão com o banco
+
 ├── helpers/ # Helpers para sessão e controle de acesso
+
 ├── lib/ # Classes de serviço (ProdutoService, UsuarioService, etc.)
+
 ├── queries/ # Arquivos com SQL separados
+
 ├── views/ # Telas da aplicação (login, dashboard, painéis)
+
 │ ├── painel/ # Views específicas por perfil (admin, caixa, estoque, etc.)
+
 │ └── layout.php # Template base com Bootstrap
+
 ├── .env # Variáveis de ambiente (credenciais do banco)
+
 ├── login.php # Tela de login
+
 ├── logout.php # Encerramento de sessão
 
 ---
